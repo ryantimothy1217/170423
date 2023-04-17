@@ -1,0 +1,182 @@
+Basic Rules Snort :
+Untuk Portscan Nmap
+
+Untuk FTP
+1. alert tcp any any -> any 21 (msg: "FTP Packet Found"; sid:100001; rev:1;)
+2. alert tcp any any -> any 80 (msg: "HTTP Packet Found"; sid:100001; rev:1;)
+
+
+
+Advanced Rules Snort :
+Punya Kating
+Untuk Portscan Nmap
+1. Nmap scan SYN
+alert tcp $EXTERNAL_NET any -> $HOME_NET 80 (msg:"NMAP Scan SYN"; flags:S,12; ack:0; threshold: type both, track by_dst, count 1, seconds 60; reference:arachnids,27; GID:1; sid:10000001; rev:001; classtype: attempted-recon;)
+2. Nmap scan FIN
+alert tcp $EXTERNAL_NET any -> $HOME_NET [21,22,80] (msg:"NMAP Scan FIN"; flow:stateless; flags:F,12; ack:0; threshold: type both, track by_dst, count 3, seconds 10; reference:arachnids,27; GID:1; sid:10000002; rev:001; classtype: attempted-recon;)
+3. Scan Nmap XMAS
+alert tcp $EXTERNAL_NET any -> $HOME_NET [21,22,80] (msg:"NMAP Scan XMAS"; flow:stateless; flags:FPU,12; ack:0; threshold: type both, track by_dst, count 3, seconds 10; reference:arachnids,30; GID:1; sid:1228; rev:7; classtype: attempted-recon;)
+
+Untuk FTP
+1. FTP access attempt
+alert tcp $HOME_NET 21 -> $EXTERNAL_NET any (msg:"FTP access attempt"; content:"530 Login incorrect"; nocase; flow:from_server,established; GID:1; sid:10000003; rev:001; classtype: attempted-admin;)
+2. FTP root user access attempt
+alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"FTP root user access attempt"; content:"USER root"; nocase; GID:1; sid:10000004; rev:001; classtype: attempted-admin;)
+3. FTP user anonymous
+alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"FTP root user access attempt"; content:"USER anonymous"; nocase; GID:1; sid:10000005; rev:001; classtype: attempted-admin;)
+
+Untuk SSH Login
+1. SSH Login attempt
+alert tcp $EXTERNAL_NET any -> $HOME_NET 22 (msg:"SSH Login attempt"; flow:to_server; flags:S; threshold:type threshold; track by_src, count:4, seconds 60; metadata:service ssh; GID:1; sid:10000006; rev:001; classtype: misc-activity;)
+
+Untuk DdoS UDP
+1. DdoS Detected
+alert tcp $EXTERNAL_NET any -> $HOME_NET 80 (msg:"DdoS Detected"; flow:stateless; flags:S; threshold:type both; track by_dst, count:70, seconds 10; GID:1; sid:10000007; rev:001; classtype: bad-unknown;)
+2. DdoS UDP
+alert tcp $EXTERNAL_NET any -> $HOME_NET 80 (msg:"DdoS UDP"; flow:stateless; threshold:type both; track by_dst, count:70, seconds 10; GID:1; sid:10000008; rev:001; classtype: bad-unknown;)
+
+Dari Youtube:
+Rule to detect failed ftp login attempts
+1. alert tcp any any <> any any (msg: "Failed FTP Login Found"; content:"530 User"; sid:100001; rev:1;)
+
+Rule to detect successful ftp login attempts
+1. alert tcp any any <> any any (msg: "Failed FTP Login Found"; content:"230 User"; sid:100002; rev:1;)
+
+Rule to detect with a valid username but a bad password or no password ftp login attempts
+1. alert tcp any any <> any any (msg: "Failed FTP Login Found"; content:"331 Password"; sid:100003; rev:1;)
+
+Rule to detect failed FTP login attempts with "Administrator" username but a bad password or no password
+1. alert tcp any any <> any any (msg: "Failed FTP Login Found"; content:"331 Password"; content:"Administrator"; sid:100004; rev:1;)
+
+sid 1-1142
+not-suspicious			Not Suspicious Traffic						3 gaada rulesnya
+unknown				Unknown Traffic							3 2
+bad-unknown			Potentially Bad Traffic						2 45
+attempted-recon			Attempted Information Leak					2 200++
+successful-recon-limited	Information Leak						2 4
+successful-recon-largescale	Large Scale Information Leak					2 gaada rulesnya
+attempted-dos			Attempted Denial of Service					2 60
+successful-dos			Denial of Service						2 gaada rulesnya
+attempted-user			Attempted User Privilege Gain					1 100++
+unsuccessful-user		Unsuccessful User Privilege Gain				1 10
+succesful-user			Successful User Privilege Gain					1 gaada rulesnya
+attempted-admin			Attempted Administrator Privilege Gain				1 100++
+successful-admin		Successful Administrator Privilege Gain				1 10
+rpc-portmap-decode		Decode of an RPC Query						2 80
+shellcode-detect		Executable code was detected					1 26
+string-detect			A suspicious string was detected				3 2
+suspicious-filename-detect	A suspicious filename was detected				2 5
+suspicious-login		An attempted login using a suspicious username was detected	2 16
+system-call-detect		A system call was detected					2 5
+tcp-connection			A TCP connection was detected					4 gaada rulesnya
+trojan-activity			A Network Trojan was detected					1 100++
+unusual-client-port-connection	A client was using an unusual port				2 gaada rulesnya
+network-scan			Detection of a Network Scan					3 7
+denial-of-service		Detection of a Denial of Service Attack				2 5
+non-standard-protocol		Detection of a non-standard protocol or event			2 1
+protocol-command-decode		Generic Protocol Command Decode					3 100++
+web-application-activity	Access to a potentially vulnerable web application		2 100++
+web-application-attack		Web Application Attack						1 100++
+misc-activity			Misc Activity							3 100++
+misc-attack			Misc Attack							2 100
+icmp-event			Generic ICMP event						3 gaada rulesnya
+inappropriate-content		Inappropriate Content was Detected				1 gaada rulesnya
+policy-violation		Potential Corporate Privacy Violation				1 64
+default-login-attempt		Attempt to login by a default username and password		2 9
+sdf				Sensitive Data							2 gaada rulesnya
+file-format			Known malicious file or file based exploit			1 gaada rulesnya
+malware-cnc			Known malware command and control traffic			1 gaada rulesnya
+client-side-exploit		Known client side exploit attempt				1 gaada rulesnya
+
+rules unknown : 
+alert tcp $EXTERNAL_NET any -> $HOME_NET 21 ( msg:"PROTOCOL-FTP no password"; flow:to_server,established; content:"PASS",fast_pattern,nocase; pcre:"/^PASS\s*\n/ims"; metadata:policy max-detect-ips drop,ruleset community; service:ftp; classtype:unknown; sid:489; rev:19; )
+alert tcp $EXTERNAL_NET any -> $HOME_NET 6000 ( msg:"X11 xopen"; flow:established; content:"l|00 0B 00 00 00 00 00 00 00 00 00|",fast_pattern,fast_pattern_offset 0,fast_pattern_length 10; metadata:policy max-detect-ips drop,ruleset community; classtype:unknown; sid:1226; rev:15; )
+
+rules bad-unknown :
+alert udp $EXTERNAL_NET 53 -> $HOME_NET any ( msg:"PROTOCOL-DNS SPOOF query response with TTL of 1 min. and no authority"; flow:to_client; content:"|81 80|",depth 4,offset 2,fast_pattern; byte_test:2,>,0,0,relative,big; byte_test:2,>,0,2,relative,big; content:"|00 00 00 00|",within 4,distance 4; content:"|C0 0C 00 01 00 01|",distance 0; byte_test:4,<,61,0,relative,big; byte_test:4,>,0,0,relative,big; metadata:policy max-detect-ips drop,ruleset community; service:dns; classtype:bad-unknown; sid:254; rev:16; )
+alert tcp $HOME_NET 21 -> $EXTERNAL_NET any ( msg:"PROTOCOL-FTP Bad login"; flow:to_client,established; content:"530 ",fast_pattern,nocase; pcre:"/^530\s+(Login|User)/ims"; metadata:ruleset community; service:ftp; classtype:bad-unknown; sid:491; rev:15; )
+alert tcp $TELNET_SERVERS 23 -> $EXTERNAL_NET any ( msg:"PROTOCOL-TELNET login failed"; flow:to_client,established; content:"Login failed",nocase; metadata:ruleset community; service:telnet; classtype:bad-unknown; sid:492; rev:15; )
+
+rules attempted-recon
+
+alert icmp $EXTERNAL_NET any -> $HOME_NET any ( msg:"PROTOCOL-ICMP traceroute"; itype:8; ttl:1; metadata:ruleset community; classtype:attempted-recon; sid:385; rev:8; )
+alert icmp $EXTERNAL_NET any -> $HOME_NET any ( msg:"PROTOCOL-ICMP ISS Pinger"; itype:8; content:"ISSPNGRQ",depth 32; metadata:ruleset community; classtype:attempted-recon; sid:465; rev:8; )
+alert udp $EXTERNAL_NET any -> $HOME_NET 161 ( msg:"PROTOCOL-SNMP NT UserList"; flow:to_server; content:"+|06 10|@|14 D1 02 19|",fast_pattern,nocase; metadata:policy max-detect-ips drop,ruleset community; service:snmp; reference:nessus,10546; classtype:attempted-recon; sid:516; rev:13; )
+
+rules succesful-recon-limited
+
+alert icmp $HOME_NET any -> $EXTERNAL_NET any ( msg:"PROTOCOL-ICMP Unusual L3retriever Ping detected"; icode:0; itype:8; dsize:>32; content:"ABCDEFGHIJKLMNOPQRSTUVWABCDEFGHI",depth 32; metadata:policy max-detect-ips drop,ruleset community; reference:url,krebsonsecurity.com/2014/01/a-closer-look-at-the-target-malware-part-ii/; reference:url,krebsonsecurity.com/2014/01/a-first-look-at-the-target-intrusion-malware/; classtype:successful-recon-limited; sid:29454; rev:2; )
+alert icmp $HOME_NET any -> $EXTERNAL_NET any ( msg:"PROTOCOL-ICMP Unusual Microsoft Windows Ping detected"; icode:0; itype:8; dsize:>32; content:"0123456789abcdefghijklmnopqrstuv",depth 32; metadata:policy max-detect-ips drop,ruleset community; reference:url,krebsonsecurity.com/2014/01/a-closer-look-at-the-target-malware-part-ii/; reference:url,krebsonsecurity.com/2014/01/a-first-look-at-the-target-intrusion-malware/; classtype:successful-recon-limited; sid:29455; rev:2; )
+alert icmp $HOME_NET any -> $EXTERNAL_NET any ( msg:"PROTOCOL-ICMP Unusual PING detected"; icode:0; itype:8; fragbits:!M; content:!"ABCDEFGHIJKLMNOPQRSTUVWABCDEFGHI",depth 32; content:!"0123456789abcdefghijklmnopqrstuv",depth 32; content:!"EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",depth 36; content:!"WANG2"; content:!"cacti-monitoring-system",depth 65; content:!"SolarWinds",depth 72; metadata:policy max-detect-ips drop,ruleset community; reference:url,krebsonsecurity.com/2014/01/a-closer-look-at-the-target-malware-part-ii/; reference:url,krebsonsecurity.com/2014/01/a-first-look-at-the-target-intrusion-malware/; classtype:successful-recon-limited; sid:29456; rev:3; )
+alert icmp $HOME_NET any -> $EXTERNAL_NET any ( msg:"PROTOCOL-ICMP Unusual Microsoft Windows 7 Ping detected"; icode:0; itype:8; dsize:>32; content:"abcdefghijklmnopqrstuvwabcdefghi",depth 32; metadata:policy max-detect-ips drop,ruleset community; reference:url,krebsonsecurity.com/2014/01/a-closer-look-at-the-target-malware-part-ii/; reference:url,krebsonsecurity.com/2014/01/a-first-look-at-the-target-intrusion-malware/; classtype:successful-recon-limited; sid:29457; rev:2; )
+
+rules attempted-dos :
+alert icmp $EXTERNAL_NET any -> $HOME_NET any ( msg:"PROTOCOL-ICMP TFN Probe"; icmp_id:678; itype:8; content:"1234",fast_pattern,nocase; metadata:ruleset community; reference:cve,2000-0138; classtype:attempted-dos; sid:221; rev:12; )
+alert icmp $HOME_NET any -> $EXTERNAL_NET any ( msg:"PROTOCOL-ICMP TFN server response"; icmp_id:123; itype:0; content:"shell bound"; metadata:ruleset community; reference:cve,2000-0138; classtype:attempted-dos; sid:238; rev:14; )
+
+rules unsuccessful-user :
+alert tcp $HOME_NET 513 -> $EXTERNAL_NET any ( msg:"PROTOCOL-SERVICES rlogin login failure"; flow:to_client,established; content:"login incorrect",fast_pattern,nocase; metadata:policy max-detect-ips drop,ruleset community; classtype:unsuccessful-user; sid:605; rev:13; )
+alert tcp $SQL_SERVERS 1433 -> $EXTERNAL_NET any ( msg:"SQL sa login failed"; flow:to_client,established; content:"Login failed for user 'sa'",fast_pattern,nocase; metadata:policy max-detect-ips drop,ruleset community; reference:bugtraq,4797; reference:cve,2000-1209; reference:nessus,10673; classtype:unsuccessful-user; sid:688; rev:18; )
+alert tcp $SQL_SERVERS 1433 -> $EXTERNAL_NET any ( msg:"SQL sa brute force failed login attempt"; flow:to_client,established,no_stream; content:"Login failed for user 'sa'",fast_pattern,nocase; detection_filter:track by_src,count 5,seconds 2; metadata:ruleset community; reference:bugtraq,4797; reference:cve,2000-1209; reference:nessus,10673; reference:url,attack.mitre.org/techniques/T1110; classtype:unsuccessful-user; sid:3152; rev:11; )
+
+rules attempted admin :
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS ( msg:"SERVER-WEBAPP admin.php file upload attempt"; flow:to_server,established; http_uri; content:"/admin.php",fast_pattern,nocase; content:"file_name="; metadata:ruleset community; service:http; reference:bugtraq,3361; reference:cve,2001-1032; classtype:attempted-admin; sid:1300; rev:18; )
+
+rules suspicious-filename-detect :
+alert tcp $EXTERNAL_NET any -> $HOME_NET 21 ( msg:"PROTOCOL-FTP passwd retrieval attempt"; flow:to_server,established; content:"RETR",nocase; content:"passwd"; metadata:ruleset community; service:ftp; classtype:suspicious-filename-detect; sid:356; rev:12; )
+alert tcp $EXTERNAL_NET any -> $HOME_NET 21 ( msg:"PROTOCOL-FTP .forward"; flow:to_server,established; content:".forward"; metadata:ruleset community; service:ftp; classtype:suspicious-filename-detect; sid:334; rev:12; )
+
+rules suspicious-login :
+alert tcp $EXTERNAL_NET any -> $HOME_NET 21 ( msg:"PROTOCOL-FTP adm scan"; flow:to_server,established; content:"PASS ddd@|0A|",fast_pattern,nocase; metadata:ruleset community; service:ftp; classtype:suspicious-login; sid:353; rev:13; )
+alert tcp $EXTERNAL_NET any -> $HOME_NET 21 ( msg:"PROTOCOL-FTP iss scan"; flow:to_server,established; content:"pass -iss@iss",fast_pattern,nocase; metadata:ruleset community; service:ftp; classtype:suspicious-login; sid:354; rev:12; )
+alert tcp $EXTERNAL_NET any -> $HOME_NET 21 ( msg:"PROTOCOL-FTP pass wh00t"; flow:to_server,established; content:"pass wh00t",fast_pattern,nocase; metadata:ruleset community; service:ftp; classtype:suspicious-login; sid:355; rev:13; )
+
+rules network-scan :
+alert icmp $EXTERNAL_NET any -> $HOME_NET any ( msg:"PROTOCOL-ICMP SolarWinds IP scan attempt"; icode:0; itype:8; content:"SolarWinds.Net",fast_pattern,nocase; metadata:ruleset community; classtype:network-scan; sid:1918; rev:10; )
+
+rules denial-of-service :
+alert tcp $EXTERNAL_NET any -> $HOME_NET 8291 ( msg:"SERVER-OTHER Mikrotik RouterOS denial of service attempt"; flow:to_server,established; content:"|12 02|",depth 2; content:"|FF ED 00 00 00 00|",distance 0; metadata:policy max-detect-ips drop,ruleset community; reference:cve,2012-6050; classtype:denial-of-service; sid:44643; rev:3; )
+
+rules web-application-activity :
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS ( msg:"SERVER-WEBAPP bash access"; flow:to_server,established; http_uri; content:"/bash",fast_pattern,nocase; metadata:policy max-detect-ips drop,ruleset community; service:http; reference:cve,1999-0509; reference:url,www.cert.org/advisories/CA-1996-11.html; classtype:web-application-activity; sid:885; rev:21; )
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS ( msg:"SERVER-WEBAPP telnet attempt"; flow:to_server,established; content:"telnet.exe",fast_pattern,nocase; metadata:ruleset community; service:http; classtype:web-application-activity; sid:1066; rev:13; )
+
+rules web-application-attack :
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS ( msg:"SERVER-WEBAPP .htpasswd access attempt"; flow:to_server,established; http_uri; content:".htpasswd",fast_pattern,nocase; metadata:policy max-detect-ips drop,ruleset community; service:http; classtype:web-application-attack; sid:1071; rev:15; )
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS ( msg:"SERVER-WEBAPP .history access"; flow:to_server,established; http_uri; content:"/.history"; metadata:ruleset community; service:http; classtype:web-application-attack; sid:1433; rev:12; )
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS ( msg:"SERVER-WEBAPP .bash_history access"; flow:to_server,established; http_uri; content:"/.bash_history"; metadata:ruleset community; service:http; reference:bugtraq,337; reference:cve,1999-0408; reference:url,attack.mitre.org/techniques/T1139; classtype:web-application-attack; sid:1434; rev:15; )
+
+rules misc-activity :
+alert icmp $EXTERNAL_NET any -> $HOME_NET any ( msg:"PROTOCOL-ICMP PING undefined code"; icode:>0; itype:8; metadata:ruleset community; classtype:misc-activity; sid:365; rev:11; )
+alert icmp $EXTERNAL_NET any -> $HOME_NET any ( msg:"PROTOCOL-ICMP PING Microsoft Windows"; itype:8; content:"0123456789abcdefghijklmnop",depth 32; metadata:ruleset community; classtype:misc-activity; sid:376; rev:11; )
+alert icmp $EXTERNAL_NET any -> $HOME_NET any ( msg:"PROTOCOL-ICMP PING Windows"; itype:8; content:"abcdefghijklmnop",depth 16; metadata:ruleset community; classtype:misc-activity; sid:382; rev:11; )
+alert icmp $EXTERNAL_NET any -> $HOME_NET any ( msg:"PROTOCOL-ICMP PING"; icode:0; itype:8; metadata:ruleset community; classtype:misc-activity; sid:384; rev:8; )
+alert icmp $EXTERNAL_NET any -> $HOME_NET any ( msg:"PROTOCOL-ICMP Destination Unreachable Destination Host Unknown"; icode:7; itype:3; metadata:ruleset community; classtype:misc-activity; sid:394; rev:9; )
+alert icmp $EXTERNAL_NET any -> $HOME_NET any ( msg:"PROTOCOL-ICMP Destination Unreachable Destination Network Unknown"; icode:6; itype:3; metadata:ruleset community; classtype:misc-activity; sid:395; rev:9; )
+alert icmp $EXTERNAL_NET any -> $HOME_NET any ( msg:"PROTOCOL-ICMP Destination Unreachable Host Unreachable"; icode:1; itype:3; metadata:ruleset community; classtype:misc-activity; sid:399; rev:9; )
+alert icmp $EXTERNAL_NET any -> $HOME_NET any ( msg:"PROTOCOL-ICMP Destination Unreachable Network Unreachable"; icode:0; itype:3; metadata:ruleset community; classtype:misc-activity; sid:401; rev:9; )
+alert icmp $EXTERNAL_NET any -> $HOME_NET any ( msg:"PROTOCOL-ICMP Echo Reply"; icode:0; itype:0; metadata:ruleset community; classtype:misc-activity; sid:408; rev:8; )
+
+rules misc-attack :
+alert tcp $EXTERNAL_NET any -> $HOME_NET 21 ( msg:"PROTOCOL-FTP wu-ftp bad file completion attempt"; flow:to_server,established; content:"~"; content:"[",distance 0; metadata:policy max-detect-ips drop,ruleset community; service:ftp; reference:bugtraq,3581; reference:bugtraq,3707; reference:cve,2001-0550; reference:cve,2001-0886; reference:nessus,10821; classtype:misc-attack; sid:1377; rev:24; )
+alert udp $EXTERNAL_NET any -> $HOME_NET 161:162 ( msg:"PROTOCOL-SNMP community string buffer overflow attempt"; flow:to_server; content:"|02 01 00 04 82 01 00|",offset 4; metadata:policy max-detect-ips drop,policy security-ips drop,ruleset community; service:snmp; reference:bugtraq,4088; reference:bugtraq,4089; reference:cve,2002-0012; reference:cve,2002-0013; reference:url,www.cert.org/advisories/CA-2002-03.html; classtype:misc-attack; sid:1409; rev:21; )
+alert tcp $EXTERNAL_NET any -> $HOME_NET 22 ( msg:"SERVER-OTHER gobbles SSH exploit attempt"; flow:to_server,established; content:"GOBBLES"; metadata:ruleset community; reference:bugtraq,5093; reference:cve,2002-0639; reference:nessus,11031; classtype:misc-attack; sid:1812; rev:13; )
+alert tcp $EXTERNAL_NET any -> $HOME_NET 21 ( msg:"PROTOCOL-FTP USER format string attempt"; flow:to_server,established; content:"USER",fast_pattern,nocase; pcre:"/^USER\s[^\n]*?%[^\n]*?%/ims"; metadata:ruleset community; service:ftp; reference:bugtraq,7474; reference:bugtraq,7776; reference:bugtraq,9262; reference:bugtraq,9402; reference:bugtraq,9600; reference:bugtraq,9800; reference:cve,2004-0277; reference:nessus,10041; reference:nessus,11687; classtype:misc-attack; sid:2178; rev:23; )
+alert tcp $EXTERNAL_NET any -> $HOME_NET 21 ( msg:"PROTOCOL-FTP PASS format string attempt"; flow:to_server,established; content:"PASS",fast_pattern,nocase; pcre:"/^PASS\s[^\n]*?%[^\n]*?%/ims"; metadata:ruleset community; service:ftp; reference:bugtraq,7474; reference:bugtraq,9262; reference:bugtraq,9800; reference:cve,2000-0699; reference:cve,2007-1195; reference:nessus,10490; classtype:misc-attack; sid:2179; rev:16; )
+
+rules policy-violation :
+alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 ( msg:"SERVER-MAIL battle-mail traffic"; flow:to_server,established; content:"BattleMail"; metadata:ruleset community; service:smtp; classtype:policy-violation; sid:490; rev:12; )
+alert tcp $HOME_NET any <> $EXTERNAL_NET 1863 ( msg:"POLICY-SOCIAL Microsoft MSN message"; flow:established; content:"MSG ",depth 4; content:"Content-Type|3A|",nocase; content:"text/plain",distance 1; metadata:ruleset community; classtype:policy-violation; sid:540; rev:17; )
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS ( msg:"OS-MOBILE Apple iPod User-Agent detected"; flow:to_server,established; http_header; content:"User-Agent|3A|"; content:"iPod",distance 0,fast_pattern; pcre:"/^User-Agent\x3a[^\r\n]*iPod/"; metadata:policy max-detect-ips drop,ruleset community; service:http; classtype:policy-violation; sid:25518; rev:5; )
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS ( msg:"OS-MOBILE Apple iPad User-Agent detected"; flow:to_server,established; http_header; content:"User-Agent|3A|"; content:"iPad",distance 0,fast_pattern; pcre:"/^User-Agent\x3a[^\r\n]*iPad/"; metadata:policy max-detect-ips drop,ruleset community; service:http; classtype:policy-violation; sid:25519; rev:5; )
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS ( msg:"OS-MOBILE Apple iPhone User-Agent detected"; flow:to_server,established; http_header; content:"User-Agent|3A|"; content:"iPhone",distance 0,fast_pattern; pcre:"/^User-Agent\x3a[^\r\n]*iPhone/"; metadata:policy max-detect-ips drop,ruleset community; service:http; classtype:policy-violation; sid:25520; rev:5; )
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS ( msg:"OS-MOBILE Android User-Agent detected"; flow:to_server,established; http_header; content:"User-Agent|3A|"; content:"android",distance 0,fast_pattern,nocase; pcre:"/^User-Agent\x3a[^\r\n]*android/i"; metadata:policy max-detect-ips drop,ruleset community; service:http; classtype:policy-violation; sid:25521; rev:4; )
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS ( msg:"OS-MOBILE Nokia User-Agent detected"; flow:to_server,established; http_header; content:"User-Agent|3A|"; content:"nokia",distance 0,fast_pattern,nocase; pcre:"/^User-Agent\x3a[^\r\n]*nokia/i"; metadata:policy max-detect-ips drop,ruleset community; service:http; classtype:policy-violation; sid:25522; rev:4; )
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS ( msg:"OS-MOBILE Samsung User-Agent detected"; flow:to_server,established; http_header; content:"User-Agent|3A|"; content:"Samsung",distance 0,fast_pattern,nocase; pcre:"/^User-Agent\x3a[^\r\n]*samsung/i"; metadata:policy max-detect-ips drop,ruleset community; service:http; classtype:policy-violation; sid:25523; rev:4; )
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS ( msg:"OS-MOBILE Kindle User-Agent detected"; flow:to_server,established; http_header; content:"User-Agent|3A|"; content:"kindle",distance 0,fast_pattern,nocase; pcre:"/^User-Agent\x3a[^\r\n]*kindle/i"; metadata:policy max-detect-ips drop,ruleset community; service:http; classtype:policy-violation; sid:25524; rev:4; )
+
+rules default-login-attempt :
+alert tcp $EXTERNAL_NET any -> $HOME_NET 9090 ( msg:"SERVER-WEBAPP Oracle JavaServer default password login attempt"; flow:to_server,established; content:"/servlet/admin"; content:"ae9f86d6beaa3f9ecb9a5b7e072a4138"; metadata:ruleset community; service:http; reference:nessus,10995; reference:url,attack.mitre.org/techniques/T1078; classtype:default-login-attempt; sid:1859; rev:14; )
+alert tcp $EXTERNAL_NET any -> $HOME_NET 8080 ( msg:"SERVER-WEBAPP Linksys router default password login attempt"; flow:to_server,established; http_header; content:"Authorization|3A|",nocase; pcre:"/^Authorization\x3a(\s*|\s*\r?\n\s+)Basic\s+OmFkbWlu/ims"; metadata:ruleset community; service:http; reference:nessus,10999; reference:url,attack.mitre.org/techniques/T1078; classtype:default-login-attempt; sid:1860; rev:15; )
+alert tcp $EXTERNAL_NET any -> $HOME_NET 8080 ( msg:"SERVER-WEBAPP Linksys router default username and password login attempt"; flow:to_server,established; content:"YWRtaW46YWRtaW4"; pcre:"/^Authorization\x3a\s*Basic\s+(?-i)YWRtaW46YWRtaW4[=\s]/ims"; metadata:ruleset community; service:http; reference:nessus,10999; reference:url,attack.mitre.org/techniques/T1078; classtype:default-login-attempt; sid:1861; rev:18; )
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS ( msg:"SERVER-WEBAPP NetGear router default password login attempt admin/password"; flow:to_server,established; http_header; content:"Authorization|3A|",nocase; content:"YWRtaW46cGFzc3dvcmQ",nocase; pcre:"/^Authorization\x3a(\s*|\s*\r?\n\s+)Basic\s+YWRtaW46cGFzc3dvcmQ/ims"; metadata:ruleset community; service:http; reference:nessus,11737; reference:url,attack.mitre.org/techniques/T1078; classtype:default-login-attempt; sid:2230; rev:17; )

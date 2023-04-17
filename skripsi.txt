@@ -1,0 +1,74 @@
+gambaran umum
+persiapkan sistem deteksi dengan menggunakan snort
+hubungkan sistem deteksi dengan database postgresql menggunakan barnyard2
+mengambil data untuk kemudian dikirimkan ke telegram sebagai media notifikasi terhadap administrator
+
+
+1. instalasi snort ( sudo apt-get install snort)
+2. konfigurasi instalasi snort (terkait interface dan ip local yang digunakan)
+3. konfigurasi snort dari file configuration ( cd /etc/snort/ lalu ls -l untuk melihat list file yang ada pada snort)
+4. melakukan backup file configurasi utama ( sudo cp snort.conf snort.conf.backup untuk melihat ls -l)
+5. melakukan proses percobaan konfigurasi rules dengan menggunakan file testing configurasi yaitu file snort.conf.test)
+6. masuk kedalam file konfigurasi untuk kemudian merubah $HOME_NET menjadi ip gateway yang digunakan untuk test keamanan)
+7. pelajari perbedaan local rules dengan imported rules
+8. hapus seluruh rules yang ada didalam file tester, untuk menghindari duplikasi rules
+9. setelah melakukan perubahan pada file konfigurasi kemudian lakukan validasi untuk memastikan file berjalan
+   (sudo snort -T -i enp0s3 -c /etc/snort/test.snort.conf atau sudo snort -T -c /etc/snort/test.snort.conf -i enp0s3)
+10. buat beberapa rules deteksi untuk snort yang pertama icmp detection rule lalu ftp connection rule
+11. icmp detection rule digunakan perintah alert icmp any any -> $HOME_NET any (msg:"ICMP Test"; sid:1000001;)
+12. lakukan validasi kembali
+13. lakukan pengujian rule pada sistem snort dengan perintah (sudo snort -A console -q -i enp0s3 -c /etc/snort/snort.conf.test
+    atau sudo snort -A console -i enp0s3 -c /etc/snort/test.snort.conf -K ascii)
+14. cd /var/log/snort untuk melihat hasil log dari sistem snort
+15. instalasi postgresql (sudo apt-get install postgresql postgresql-contrib)
+16. cek direktori file konfig dari postgresql ( ls /etc/postgresql/12(versi)/main/
+17. cek apakah postgresql sudah berhasil berjalan
+18. untuk melakukan pemeriksaan command yang dapat digunakan dalam postgresql yaitu service postgresql
+19. service postgresql status adalah command untuk melihat status dari postgresql
+20. sudo su postgres untuk masuk sebagai root dari postgresql
+21. psql untuk masuk kedalam commandline postgresql
+22. \l untuk melihat list database
+23. \du untuk melihat user2 yang ada
+24. ALTER USER postgres WITH PASSWORD 'xxx'; untuk merubah user password
+25. CREATE USER user_1 WITH PASSWORD 'xxx'; untuk membuat password
+26. ALTER USER user_1 WITH SUPERUSER; untuk menambahkan attributes dari user
+27. DROP USER user_1; untuk menghapus user yang dibuat
+28. man psql untuk melihat command penjelasan lebih detail
+29. 
+
+menit 1 disuruh studi kasus
+menerapkan sistem secara lebih nyata dari sistem yang sudah dibuat
+menyiapkan sistem dulu, untuk kemudian diujikan disistem real
+saat ini simulasi dulu, sejauh mana bisa berfungsi dengan baik
+bagaimana kita bisa akses data log dari snort
+untuk monitoring harus bisa akses data log
+barnyard2 sebagai penghubung antara data log dengan database yang akan dipantau (postgresql)
+kategorikan penyerangan low medium high misal ping aja itu kategori penyerangan low kalau low aja gausah kirim ke admin
+kalo medium dan high baru akan dilempar ke admin lewat notif telegram admin
+disaat proposal lakukan simulasi dulu bangun sistemnya
+kemudian tentukan level serangan yang ada coba dilakukan
+kalau bisa ada serangan yang belum terdaftar, itu disampaikan ke admin jg apakah kategori low medium atau high
+hasil akhir akan menyejikan data-data statistik serangan terhadap sistem tempat studi kasus
+ada serangan dalam berapa hari minggu atau bulan
+yang low ada berapa serangan, minggu berapa serangan, bulan berapa serangan
+dibuatkan penggambaran secara deskriptif data low medium high
+membangun sistem, apakah sudah berfungsi?
+setelah berfungsi, melakukan analisa terhadap data log dari snort ada berapa kategori low medium atau high atau mungkin ada yang belum terkategori
+sehingga kita mengetahui peta data penyerangan terhadap data center organisasi x
+sehingga pengelola admin dari waktu ke waktu tahu apa keperluan atau pengembangan apa yang perlu dilakukan
+bisa juga memberikan rekomendasi dari hasil log sebaiknya beberapa serangan yang dapat mengganggu itu dapat dilakukan pemblokiran supaya tidak membebani sistem
+acuan apa yang menjadikan kategori serangan itu low medium atau high
+terakhir di 21:50
+
+3. ip yang digunakan ke dalam snort
+3. catat ip sisitem dan tester
+4. backup rules
+5. sudo snort -T -l enp0s3 -c /etc/snort/ (tes hasil konfig)
+
+kasih tau jadwal up
+bilang progres sudah sampai mana, kendala dimana
+jujur belum siap maju up karna progres masih dikit
+pak arya soalnya nyuruh studi kasus dan saya baru dapat kemarin
+sehingga saya belum mencoba melakukan penelitian dan sistemnya belum berjalan
+jadi begini pak, saya mau tanya untuk mundur jadwal up itu bisa tidak ya? dikarenakan kalau saya jadi maju besok kamis
+progres saya baru sampai di snort

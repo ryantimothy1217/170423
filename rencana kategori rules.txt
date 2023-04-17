@@ -1,0 +1,77 @@
+Jenis Serangan Parah :
+1. SQL Injection 
+source : ( https://www.hackingarticles.in/detect-sql-injection-attack-using-snort-ids/ )
+rules : alert tcp any any -> any 80 (msg: "Form Based SQL Injection Detected"; content: "%27" ; sid:1000003; ) untuk kutip
+attack : masuk ke login page, ketik petik pada form
+
+2. DDoS Attack :
+-) SYN Flood Attack 
+source : file:///C:/Users/Ryan%20Butarbutar/Downloads/DetectingDDoSattackusingSnort.pdf
+rules : alert tcp any any -> $HOME_NET 80 (flags: S; msg:"Possible DoS Attack Type : SYN flood"; flow:stateless; detection_filter:track by_dst, count 20, seconds 10; sid:3; rev:1;)
+attack : 
+
+source : https://cyvatar.ai/write-configure-snort-rules/
+rules : alert tcp any any -> 192.168.10.5 443 (msg: “TCP SYN flood”; flags:!A; flow: stateless; detection_filter: track by_dst, count 70, seconds 10; sid:2000003;)
+attack : 
+
+-) ICMP FLood Attack atau Ping FLood
+source : file:///C:/Users/Ryan%20Butarbutar/Downloads/DetectingDDoSattackusingSnort.pdf
+rules : alert icmp any any -> $HOME_NET any (msg:"ICMP flood"; itype:8; detection_filter:track by_dst, count 500, seconds 3; classtype:icmp-event; sid:1000001; rev:1;)
+attack: 
+
+-) UDP Flood Attack 
+source : https://www.youtube.com/watch?v=c1g8krXp2k4
+rules : alert udp any any -> $HOME_NET any (msg:"UDP Flooding detected"; detection_filter:track by_dst, count 500, seconds 5, sid:2932, rev:002;)
+attack : hping3 --udp --rand-source --flood (ip target)
+
+-) DNS Flood Attack 
+source : file:///C:/Users/Ryan Butarbutar/Downloads/Mitigation_of_DoS_and_Port_Scan_Attacks_Using_Snor-1.pdf
+rules : alert udp any any -> $HOME_NET 53 (msg:"DNS Flooding Detected"; detection_filter:track by_dst, count 500, seconds 5, sid:10000001, rev:003;)
+attack : hping3 --udp --rand-source --flood (ip target)
+
+-) HTTP Flood Attack 
+source : file:///C:/Users/Ryan%20Butarbutar/Downloads/Mitigation_of_DoS_and_Port_Scan_Attacks_Using_Snor-1.pdf
+rules : alert tcp !$HOME_NET any -> $HOME_NET 80 (flags:S; msg:"Possible http flood attack"; flow:established; content:"GET"; nocase; http_method; detection_filter: track by_dst, count 90000, seconds 60; sid:10000004; rev:001;)
+attack : hping3 --udp --rand-source --flood (ip target)
+
+-) Ping of Death (memanupulasi packet request dengan file byte yang besar)
+source :
+1.  https://www.youtube.com/watch?v=k6H7LLUjnDo
+2.  https://www.youtube.com/watch?v=-9IHAVe0AOA
+rules :
+1. alert icmp any any -> any any (dsize > 10000; msg "Ping of Death Detected"; sid: 10000001)
+2. alert icmp any any -> $HOME_NET any ( msg "ICMP Ping of Death Attack"; itype:8; dsize:>10000; detection_filter:track by_src, count 10, seconds 5; classtype:denial-of-service; sid: 10000001 rev:1;)
+attack :
+1. buka terminal jalankan perintah : ping (ip target) -l 65500
+2. buka terminal jalankan perintah : ping (ip target) -t -l 65500
+
+
+Jenis Serangan Menengah :
+
+1. Port Scan
+-) Nmap Portscan
+source : https://www.hackingarticles.in/detect-nmap-scan-using-snort/
+rules : alert tcp any any -> 192.168.1.105 22 (msg: "NMAP TCP Scan";sid:10000005; rev:2;
+attack : buka terminal jalankan nmap -sT -p22 (ip target)
+
+-) Ack scan
+source : file:///C:/Users/Ryan Butarbutar/Downloads/Mitigation_of_DoS_and_Port_Scan_Attacks_Using_Snor-1.pdf
+rules : alert tcp any any -> $HOME_NET any (flags: A; ack: 0; msg:"ACK Scan Detected"; sid:10000013; rev:001;)
+attack : 
+
+-) Fin scan
+source : file:///C:/Users/Ryan Butarbutar/Downloads/Mitigation_of_DoS_and_Port_Scan_Attacks_Using_Snor-1.pdf
+rules : alert tcp !$HOME_NET any -> $HOME_NET any ( flags:SF; msg:"FIN scan"; flow: stateless; sid:10000014; rev:001;)
+attack : 
+
+Jenis Serangan Rendah :
+
+1. ICMP Packet Found
+source : https://www.youtube.com/watch?v=av9kzh5Y-70
+rules : alert icmp any any -> (ip target) any (msg: "ICMP Packet Found"; sid:10000001;)
+attack : 
+
+2. HTTP Packet Found
+source : 
+rules : alert tcp any any -> any 80 (msg: "HTTP Packet Found"; sid: 1000001; rev:1;)
+attack : masuk ke website sister

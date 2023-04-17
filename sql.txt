@@ -1,0 +1,24 @@
+''' CREATE TABLE IF NOT EXISTS datastore (
+                                id      int PRIMARY KEY,
+                                jenis_serang varchar(50) NOT NULL,
+                                ip_penyerang varchar(15),
+                                ip_diserang varchar(15),
+                                port_penyerang varchar(15),
+                                port_diserang varchar(15),
+                                tanggal_serang varchar(15),
+                                waktu_serang varchar(15))'''
+
+'''
+        CREATE SEQUENCE public.autoinc
+        INCREMENT 1
+        START 1
+        MINVALUE 1; 
+    '''
+
+"ALTER TABLE ONLY datastore ALTER COLUMN id SET DEFAULT nextval('autoinc'::regclass);"
+
+'''
+                        INSERT INTO datastore 
+                        (jenis_serang, ip_penyerang, ip_diserang, port_penyerang, port_diserang, 
+                        tanggal_serang, waktu_serang) 
+                        VALUES ( %s, %s, %s, %s, %s, %s, %s)'''

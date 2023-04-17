@@ -1,0 +1,4 @@
+di metode penelitian tambahin software dan hardware yang digunakan
+jelasin lebih rinci mode2 yang ada di snort bab 2
+
+*note: pytelegrambotapi, git sama psycopg2 dll perlu dimasukin ke tinjauan?
